@@ -19,13 +19,10 @@ fn main() -> Result<()> {
     let recipes = index_recipes(&recipes_dir)?;
     let ingredient_index = create_ingredient_index(&recipes);
     
-    // Print the index
-    for (ingredient, paths) in ingredient_index.iter() {
-        println!("{}:", ingredient);
-        for path in paths {
-            println!("  - {}", path.display());
-        }
-    }
+    // Generate and save HTML
+    let html = generate_html_index(&ingredient_index)?;
+    fs::write("ingredient-index.html", html)?;
+    println!("Index generated at: ingredient-index.html");
     
     Ok(())
 }
@@ -76,4 +73,89 @@ fn create_ingredient_index(recipes: &[Recipe]) -> HashMap<String, Vec<PathBuf>> 
     }
     
     index
+}
+
+fn generate_html_index(index: &HashMap<String, Vec<PathBuf>>) -> Result<String> {
+    let mut ingredients: Vec<_> = index.keys().collect();
+    ingredients.sort();
+    
+    let mut html = String::from(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Ingredient Index</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .ingredient {
+            margin: 20px 0;
+        }
+        .ingredient-name {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 5px;
+        }
+        .recipe-list {
+            margin-left: 20px;
+            list-style-type: none;
+        }
+        .recipe-list li {
+            margin: 5px 0;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recipe Ingredient Index</h1>
+"#);
+
+    for ingredient in ingredients {
+        html.push_str("<div class=\"ingredient\">\n");
+        html.push_str(&format!("    <div class=\"ingredient-name\">{}</div>\n", ingredient));
+        html.push_str("    <ul class=\"recipe-list\">\n");
+        
+        if let Some(recipes) = index.get(ingredient) {
+            for recipe_path in recipes {
+                let recipe_name = recipe_path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("Unknown Recipe")
+                    .replace("-", " ")
+                    .replace("_", " ");
+                
+                // Create a relative path for the link
+                let path_str = recipe_path.to_string_lossy();
+                
+                html.push_str(&format!(
+                    "        <li><a href=\"{}\">{}</a></li>\n",
+                    path_str,
+                    recipe_name
+                ));
+            }
+        }
+        
+        html.push_str("    </ul>\n");
+        html.push_str("</div>\n");
+    }
+
+    html.push_str("</body>\n</html>");
+    
+    Ok(html)
 }
