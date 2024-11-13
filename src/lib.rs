@@ -190,7 +190,7 @@ pub fn path_to_url(path: &Path, base_url: &str, base_dir: &Path) -> String {
 /// Creates the Ingredient-Recipe index
 ///
 /// Walks the provided directory, extracting cooklang ingredients
-fn index_recipes(dir: &str) -> Result<Vec<Recipe>> {
+fn index_recipes(dir: &Path) -> Result<Vec<Recipe>> {
     let mut recipes = Vec::new();
     let ingredient_regex = Regex::new(r"@([^{@\n]+)(?:\{[^}]*\})?").unwrap();
     

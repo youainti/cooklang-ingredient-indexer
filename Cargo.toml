@@ -3,7 +3,7 @@ name = "cooklang-indexer"
 version = "0.1.0"
 edition = "2021"
 description = "A library for indexing and generating HTML indexes of cooklang recipe ingredients"
-license = "MIT"  # or whatever license you prefer
+license = "MIT"  
 
 [lib]
 name = "cooklang_indexer"
